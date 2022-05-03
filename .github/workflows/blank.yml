@@ -6,7 +6,7 @@ on:
       TWRP_RES:
         description: 'TWRP_RES'
         required: true
-        default: 'git://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git'
+        default: 'https://github.com/SHRP/platform_manifest_twrp_omni.git'
       TWRP_BRANCH:
         description: 'TWRP_BRANCH'
         required: true
@@ -50,8 +50,10 @@ jobs:
       run: |
         mkdir twrp
         cd ${{ github.workspace }}/twrp
+        git config --global user.name "Actions BOT"
+        git config --global user.email "actions@github.com"
         repo init --depth=1 -u ${{ github.event.inputs.TWRP_RES }} -b ${{ github.event.inputs.TWRP_BRANCH }}
-        repo sync
+        repo sync -j$(nproc --all)
 
     - name: 拉取设备树
       run: |
