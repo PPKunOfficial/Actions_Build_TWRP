@@ -58,18 +58,17 @@ jobs:
         cd ${{ github.workspace }}/rec
         repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
         ls -al
-      id: pwd
 
     - name: 拉取设备树
       run: |
         PATH=~/bin:$PATH
-        cd ${{ steps.pwd.outputs.pwd }}
+        cd ${{ github.workspace }}/rec
         git clone ${{ github.event.inputs.DT_URL }} -b ${{ github.event.inputs.DT_BRANCH }}
 
     - name: 开始编译
       run: |
         PATH=~/bin:$PATH
-        cd ${{ steps.pwd.outputs.pwd }}
+        cd ${{ github.workspace }}/rec
         export ALLOW_MISSING_DEPENDENCIES=true
         . build/envsetup.sh
         lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng
