@@ -63,7 +63,7 @@ jobs:
       run: |
         PATH=~/bin:$PATH
         cd ${{ github.workspace }}/rec
-        git clone ${{ github.event.inputs.DT_URL }} -b ${{ github.event.inputs.DT_BRANCH }}
+        git clone ${{ github.event.inputs.DT_URL }} -b ${{ github.event.inputs.DT_BRANCH }} ${{ github.workspace }}/rec/${{ github.event.inputs.DC_PATH }}
 
     - name: 开始编译
       run: |
