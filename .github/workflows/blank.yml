@@ -3,30 +3,34 @@ name: "Build TWRP"
 on:
   workflow_dispatch:
     inputs:
-      TWRP_RES:
-        description: 'TWRP_RES'
+      MANIFEST_URL:
+        description: 'MANIFEST_URL'
         required: true
-        default: 'https://github.com/SHRP/manifest.git'
-      TWRP_BRANCH:
-        description: 'TWRP_BRANCH'
+        default: 'https://github.com/SHRP/platform_manifest_twrp_omni'
+      MANIFEST_BRANCH:
+        description: 'MANIFEST_BRANCH'
         required: true
         default: 'v3_11.0'
-      DT_RES:
-        description: 'DT_RES'
+      DT_URL:
+        description: 'DT_URL'
         required: true
         default: 'https://github.com/PPKunOfficial/DeviceTree-Dipper.git'
       DT_BRANCH:
         description: 'DT_BRANCH'
         required: true
         default: 'main'
-      DC_NAME:
-        description: 'DEVICE_NAME'
+      DC_PATH:
+        description: 'DC_PATH'
         required: true
         default: 'device/xiaomi/dipper'
-      DC_N:
-        description: 'DEVICE_NAME1'
+      DC_NAME:
+        description: 'DC_NAME'
         required: true
         default: 'dipper'
+      MAKEFILE_NAME:
+        description: 'MAKEFILE_NAME'
+        required: true
+        default: 'omni_dipper'
 
 jobs:
   twrp:
@@ -41,28 +45,34 @@ jobs:
     - name: 安装repo
       run: |
         mkdir -p ~/bin
-        curl https://mirrors.tuna.tsinghua.edu.cn/git/git-repo > ~/bin/repo
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
         sudo cp ~/bin/repo /bin/repo
         sudo chmod a+x /bin/repo
-        export REPO_URL='https://mirrors.tuna.tsinghua.edu.cn/git/git-repo'
+        mkdir rec
+        cd ${{ github.workspace }}/rec
+        repo init --depth=1 -u ${{ github.event.inputs.MANIFEST_URL }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
 
     - name: 拉取源码
       run: |
-        mkdir twrp
-        cd ${{ github.workspace }}/twrp
-        repo init -u ${{ github.event.inputs.TWRP_RES }} -b ${{ github.event.inputs.TWRP_BRANCH }}
+        PATH=~/bin:$PATH
+        cd ${{ github.workspace }}/rec
         repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+        ls -al
+      id: pwd
 
     - name: 拉取设备树
       run: |
-        cd ${{ github.workspace }}/twrp
-        git clone ${{ github.event.inputs.DT_RES }} ${{ github.event.inputs.DC_NAME }} -b ${{ github.event.inputs.DT_BRANCH }}
+        PATH=~/bin:$PATH
+        cd ${{ steps.pwd.outputs.pwd }}
+        git clone ${{ github.event.inputs.DT_URL }} -b ${{ github.event.inputs.DT_BRANCH }}
 
     - name: 开始编译
       run: |
-        cd ${{ github.workspace }}/twrp
+        PATH=~/bin:$PATH
+        cd ${{ steps.pwd.outputs.pwd }}
+        export ALLOW_MISSING_DEPENDENCIES=true
         . build/envsetup.sh
-        lunch omni_${{ github.event.inputs.DC_N }}-eng
+        lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng
         mka recoveryimage -j$(nproc --all)
     
     - name: 发布到Release
@@ -73,6 +83,6 @@ jobs:
         prerelease: false
         title: Release ${{ github.run_id }}
         files: |
-          ${{ github.workspace }}/twrp/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/*.zip
-          ${{ github.workspace }}/twrp/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery.img
-          ${{ github.workspace }}/twrp/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/*.cpio
+          ${{ github.workspace }}/twrp/out/target/product/${{ github.event.inputs.DC_PATH }}/*.zip
+          ${{ github.workspace }}/twrp/out/target/product/${{ github.event.inputs.DC_PATH }}/recovery.img
+          ${{ github.workspace }}/twrp/out/target/product/${{ github.event.inputs.DC_PATH }}/*.cpio
