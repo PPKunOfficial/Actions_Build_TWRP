@@ -83,6 +83,4 @@ jobs:
         prerelease: false
         title: Release ${{ github.run_id }}
         files: |
-          ${{ github.workspace }}/twrp/out/target/product/${{ github.event.inputs.DC_PATH }}/*.zip
-          ${{ github.workspace }}/twrp/out/target/product/${{ github.event.inputs.DC_PATH }}/recovery.img
-          ${{ github.workspace }}/twrp/out/target/product/${{ github.event.inputs.DC_PATH }}/*.cpio
+          ${{ github.workspace }}/rec/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery.img
